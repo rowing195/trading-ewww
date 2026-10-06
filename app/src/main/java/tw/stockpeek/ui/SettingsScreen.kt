@@ -197,7 +197,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         value = maText,
                         onValueChange = { maText = it },
                         label = { Text("均線週期") },
-                        supportingText = { Text("最多 4 條，用逗號分隔；清空＝不畫均線") },
+                        supportingText = { Text("最多 5 條，用逗號分隔；清空＝不畫均線") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                     )

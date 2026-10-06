@@ -58,7 +58,7 @@ data class AppSettings(
     val sortMode: SortMode = SortMode.CUSTOM,
 )
 
-val DEFAULT_MA = listOf(5, 10, 20, 60)
+val DEFAULT_MA = listOf(5, 10, 20, 60, 200)
 
 /** 台股代號：4–6 碼英數，例如 2330、00878、00631L。 */
 val SYMBOL_REGEX = Regex("^[0-9A-Z]{4,6}$")

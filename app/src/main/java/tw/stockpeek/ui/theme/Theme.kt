@@ -24,12 +24,13 @@ val LocalMarketColors = staticCompositionLocalOf {
     MarketColors(up = Color(0xFFD93025), down = Color(0xFF138A45), flat = Color(0xFF5F6368))
 }
 
-/** K 線均線顏色，依序對應設定裡的第 1–4 條。 */
+/** K 線均線顏色，依序對應設定裡的第 1–5 條。 */
 val MaColors = listOf(
     Color(0xFFF59E0B),
     Color(0xFF3B82F6),
     Color(0xFFA855F7),
     Color(0xFF64748B),
+    Color(0xFF0891B2),
 )
 
 private val LightScheme = lightColorScheme(

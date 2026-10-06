@@ -13,10 +13,10 @@ fun movingAverage(values: List<Double>, period: Int): DoubleArray {
     return out
 }
 
-/** 解析「5,10,20,60」這種均線設定；最多 4 條，每條 2–240。 */
+/** 解析「5,10,20,60,200」這種均線設定；最多 5 條，每條 2–240。 */
 fun parseMaPeriods(text: String): List<Int> =
     text.split(Regex("[\\s,，、]+"))
         .mapNotNull { it.trim().toIntOrNull() }
         .filter { it in 2..240 }
         .distinct()
-        .take(4)
+        .take(5)

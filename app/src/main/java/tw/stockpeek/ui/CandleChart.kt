@@ -224,7 +224,7 @@ fun CandleChart(
 
         fun xOf(i: Int): Float = plotRight - (endF - i - 0.5f) * w
 
-        // ---- 價格與成交量範圍（只看畫面內）----
+        // ---- 價格與成交量範圍（只看畫面內的 K 棒；均線不納入，超出範圍的部分會被裁掉）----
         var hi = Double.NEGATIVE_INFINITY
         var lo = Double.POSITIVE_INFINITY
         var maxVol = 0.0
@@ -237,14 +237,6 @@ fun CandleChart(
             hi = max(hi, b.high)
             lo = min(lo, b.low)
             maxVol = max(maxVol, b.volume)
-            for (ma in maSeries) {
-                if (ma.size != n) continue
-                val v = ma[i]
-                if (!v.isNaN()) {
-                    hi = max(hi, v)
-                    lo = min(lo, v)
-                }
-            }
         }
         if (hi <= lo) {
             hi += 1.0

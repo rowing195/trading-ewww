@@ -298,7 +298,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             // 歷史端點單次查詢要小於 1 年，所以分段抓；週、月 K 的切點對齊週一、月初，避免切出半根 K 棒
             Timeframe.DAY -> chunked(symbol, tf, today, chunks = 2) { it.minusDays(364) }
-            Timeframe.WEEK -> chunked(symbol, tf, today, chunks = 3) {
+            Timeframe.WEEK -> chunked(symbol, tf, today, chunks = 5) { // 約 5 年，MA200 才畫得出來
                 it.minusDays(350).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
             }
             Timeframe.MONTH -> chunked(symbol, tf, today, chunks = 10) {
