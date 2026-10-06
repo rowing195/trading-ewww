@@ -129,7 +129,7 @@ trading-ewww 是自用的台股看盤 Android App：首頁一眼看自選股漲�
 			</thead>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/rowing195/trading-ewww/blob/main/app/build.gradle.kts'>build.gradle.kts</a></b></td>
-					<td style='padding: 8px;'>- 定義 App 的建置設定：版本 0.0.2、compileSdk 與 targetSdk 36、minSdk 26。<br>- release 開啟 R8 壓縮與資源縮減，並以 debug 金鑰簽章方便自用直接安裝。<br>- 列出 Compose、DataStore、Lifecycle、協程等依賴。</td>
+					<td style='padding: 8px;'>- 定義 App 的建置設定：版本 0.0.1、compileSdk 與 targetSdk 36、minSdk 26。<br>- release 開啟 R8 壓縮與資源縮減，並以 debug 金鑰簽章方便自用直接安裝。<br>- 列出 Compose、DataStore、Lifecycle、協程等依賴。</td>
 				</tr>
 				<tr style='border-bottom: 1px solid #eee;'>
 					<td style='padding: 8px;'><b><a href='https://github.com/rowing195/trading-ewww/blob/main/app/proguard-rules.pro'>proguard-rules.pro</a></b></td>
