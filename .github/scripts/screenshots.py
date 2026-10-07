@@ -35,9 +35,10 @@ def nodes():
     # 畫面還在動（例如載入中的轉圈）時 dump 會失敗，交給呼叫端重試
     shell(f"uiautomator dump {DUMP}", check=False)
     xml = adb("exec-out", f"cat {DUMP}", check=False)
-    if not xml.startswith("<?xml"):
-        return []
-    return list(ET.fromstring(xml).iter("node"))
+    try:
+        return list(ET.fromstring(xml).iter("node"))
+    except ET.ParseError:
+        return []  # 檔案還沒寫完或 dump 失敗，交給呼叫端重試
 
 
 def find(text=None, desc=None, cls=None, timeout=30):
