@@ -44,6 +44,9 @@ private const val MIN_VISIBLE = 12f
 private const val MAX_VISIBLE = 300f
 private val AXIS_WIDTH = 52.dp
 
+/** 均線離畫面內 K 棒的範圍不超過這個比例才納入價格範圍；再遠就讓它出圖，改在圖邊標價位。 */
+private const val MA_RANGE_SLACK = 0.3
+
 /** 可視範圍：畫面上放幾根 K 棒，以及最右邊藏了幾根（0 = 貼齊最新一根）。 */
 @Stable
 class ChartViewport(initialVisible: Float) {
@@ -74,6 +77,7 @@ private enum class Gesture { Tap, Transform, Cross }
 fun CandleChart(
     bars: List<Candle>,
     maSeries: List<DoubleArray>,
+    maPeriods: List<Int>,
     showVolume: Boolean,
     timeframe: Timeframe,
     selectedIndex: Int?,
@@ -224,7 +228,9 @@ fun CandleChart(
 
         fun xOf(i: Int): Float = plotRight - (endF - i - 0.5f) * w
 
-        // ---- 價格與成交量範圍（畫面內的 K 棒與均線，均線才不會跑出圖外）----
+        // ---- 價格與成交量範圍 ----
+        // 先看畫面內的 K 棒；均線離得不遠才一起納入。離太遠的（例如 MA200）納入會把 K 棒壓扁，
+        // 就讓它出圖，改在圖邊標價位
         var hi = Double.NEGATIVE_INFINITY
         var lo = Double.POSITIVE_INFINITY
         var maxVol = 0.0
@@ -237,17 +243,29 @@ fun CandleChart(
             hi = max(hi, b.high)
             lo = min(lo, b.low)
             maxVol = max(maxVol, b.volume)
-            maSeries.forEach { ma ->
-                val v = if (ma.size == n) ma[i] else Double.NaN
-                if (!v.isNaN()) {
-                    hi = max(hi, v)
-                    lo = min(lo, v)
-                }
-            }
         }
         if (hi <= lo) {
             hi += 1.0
             lo -= 1.0
+        }
+        val slack = (hi - lo) * MA_RANGE_SLACK
+        val barHi = hi
+        val barLo = lo
+        maSeries.forEach { ma ->
+            if (ma.size != n) return@forEach
+            var maHi = Double.NEGATIVE_INFINITY
+            var maLo = Double.POSITIVE_INFINITY
+            for (j in iStart..iEnd) {
+                val v = ma[j]
+                if (!v.isNaN()) {
+                    maHi = max(maHi, v)
+                    maLo = min(maLo, v)
+                }
+            }
+            if (maHi <= barHi + slack && maLo >= barLo - slack) {
+                hi = max(hi, maHi)
+                lo = min(lo, maLo)
+            }
         }
         val pad = (hi - lo) * 0.06
         val pHi = hi + pad
@@ -341,6 +359,33 @@ fun CandleChart(
         }
         marker(hiIdx, bars[hiIdx].high)
         marker(loIdx, bars[loIdx].low)
+
+        // ---- 出圖的均線：在右側標出畫面最右一根的均線價位與方向 ----
+        val tagGap = 2.dp.toPx()
+        val tagPad = 3.dp.toPx()
+        var aboveY = top + tagGap
+        var belowY = mainBottom - tagGap
+        maSeries.forEachIndexed { k, ma ->
+            if (ma.size != n) return@forEachIndexed
+            val v = ma[iEnd]
+            if (v.isNaN() || v in pLo..pHi) return@forEachIndexed
+            val above = v > pHi
+            val layout = measurer.measure(
+                "MA${maPeriods.getOrNull(k) ?: ""} ${formatPrice(v)} ${if (above) "↑" else "↓"}",
+                axisStyle.copy(color = MaColors[k % MaColors.size]),
+            )
+            val tagW = layout.size.width + tagPad * 2
+            val tagH = layout.size.height.toFloat()
+            val ty = if (above) {
+                aboveY.also { aboveY += tagH + tagGap }
+            } else {
+                belowY -= tagH
+                belowY.also { belowY -= tagGap }
+            }
+            val tx = plotRight - tagW - tagGap
+            drawRect(scheme.background.copy(alpha = 0.85f), Offset(tx, ty), Size(tagW, tagH))
+            drawText(layout, topLeft = Offset(tx + tagPad, ty))
+        }
 
         // ---- 最新價虛線 ----
         val last = bars[n - 1]

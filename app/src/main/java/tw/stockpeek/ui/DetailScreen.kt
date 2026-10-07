@@ -165,6 +165,7 @@ fun DetailScreen(vm: AppViewModel, symbol: String, onBack: () -> Unit) {
                     else -> CandleChart(
                         bars = data.orEmpty(),
                         maSeries = maSeries,
+                        maPeriods = settings.maPeriods,
                         showVolume = settings.showVolume,
                         timeframe = tf,
                         selectedIndex = selected,
