@@ -4,6 +4,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -262,6 +264,7 @@ private fun Stat(label: String, value: String, color: androidx.compose.ui.graphi
 }
 
 /** K 線上方的資訊列：十字線選到哪根就顯示哪根，沒選就顯示最新一根。 */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BarInfo(
     bars: List<Candle>?,
@@ -303,10 +306,8 @@ private fun BarInfo(
                 Text("高 ${formatPrice(b.high)}", style = style)
                 Text("低 ${formatPrice(b.low)}", style = style)
             }
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+            // 均線多、價格位數多時一行放不下，換行顯示
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 periods.forEachIndexed { k, p ->
                     val v = maSeries.getOrNull(k)?.getOrNull(idx)
                     Text(
