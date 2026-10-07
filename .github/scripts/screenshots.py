@@ -10,6 +10,8 @@ import re
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 import xml.etree.ElementTree as ET
 
 PKG = "tw.stockpeek"
@@ -60,10 +62,48 @@ def tap(**kw):
     shell(f"input tap {x} {y}")
 
 
-def type_text(value):
+def type_text(value, chunk=10):
+    # 一次送太長，模擬器偶爾會掉字，所以分段送。
     # 裝置端 sh 用單引號包起來；input text 用 %s 代表空白
-    escaped = value.replace("'", "'\\''").replace(" ", "%s")
-    shell(f"input text '{escaped}'")
+    for i in range(0, len(value), chunk):
+        escaped = value[i:i + chunk].replace("'", "'\\''").replace(" ", "%s")
+        shell(f"input text '{escaped}'")
+
+
+def check_key(key):
+    """從 runner 直接打一次富果 API，分辨是金鑰本身的問題還是輸入過程出錯。不印出金鑰。"""
+    req = urllib.request.Request(
+        "https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/2330",
+        headers={"X-API-KEY": key, "Accept": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            print(f"金鑰直接測試：HTTP {r.status}（長度 {len(key)}）", flush=True)
+            return True
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:200]
+        print(f"金鑰直接測試：HTTP {e.code} {body}（長度 {len(key)}）", flush=True)
+    except OSError as e:
+        print(f"金鑰直接測試：連線失敗 {e}", flush=True)
+    return False
+
+
+def enter_key(key, attempts=3):
+    """輸入金鑰後切成「顯示」核對一次，不一致就清掉重打。"""
+    for _ in range(attempts):
+        tap(cls="android.widget.EditText")  # 設定頁第一個輸入框就是金鑰欄
+        shell("input keyevent KEYCODE_MOVE_END")
+        shell("input keyevent " + " ".join(["KEYCODE_DEL"] * 200))
+        type_text(key)
+        tap(text="顯示")
+        node, _ = find(cls="android.widget.EditText")
+        typed = node.get("text", "")
+        tap(text="隱藏")
+        if typed == key:
+            print("輸入框內容與金鑰一致", flush=True)
+            return
+        print(f"輸入框內容與金鑰不一致（輸入 {len(typed)} 字，應為 {len(key)} 字），重打", flush=True)
+    raise SystemExit("金鑰一直輸入不正確")
 
 
 def shot(name, wait=2.0):
@@ -85,6 +125,8 @@ shell("cmd uimode night no", check=False)
 shell(f"am start -W -n {PKG}/.MainActivity")
 
 key = os.environ.get("FUGLE_API_KEY", "").strip()
+if key and not check_key(key):
+    raise SystemExit("富果 API 不接受這把金鑰：請確認 FUGLE_API_KEY 是完整、有效的金鑰")
 
 # ---------- 未設定金鑰 ----------
 
@@ -101,8 +143,7 @@ if not key:
 
 # ---------- 輸入金鑰 ----------
 
-tap(cls="android.widget.EditText")  # 設定頁第一個輸入框就是金鑰欄
-type_text(key)
+enter_key(key)
 tap(text="儲存並測試")
 node, _ = find(text=r"金鑰可用 ✓|.*(無效|失敗|錯誤|上限|HTTP).*", timeout=40)
 if not node.get("text").endswith("✓"):
