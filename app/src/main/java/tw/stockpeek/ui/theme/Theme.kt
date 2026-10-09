@@ -9,10 +9,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
-/** 漲跌配色；台股慣例漲紅跌綠，設定裡可以反過來。 */
+/** 漲跌配色；台股慣例漲紅跌綠，設定裡可以反過來。caution 用在過熱、超跌這類提醒。 */
 @Immutable
-data class MarketColors(val up: Color, val down: Color, val flat: Color) {
+data class MarketColors(val up: Color, val down: Color, val flat: Color, val caution: Color) {
     fun of(change: Double?): Color = when {
         change == null || change == 0.0 -> flat
         change > 0 -> up
@@ -21,17 +22,24 @@ data class MarketColors(val up: Color, val down: Color, val flat: Color) {
 }
 
 val LocalMarketColors = staticCompositionLocalOf {
-    MarketColors(up = Color(0xFFD93025), down = Color(0xFF138A45), flat = Color(0xFF5F6368))
+    MarketColors(up = Color(0xFFD93025), down = Color(0xFF138A45), flat = Color(0xFF5F6368), caution = Color(0xFFB45309))
 }
 
-/** K 線均線顏色，依序對應設定裡的第 1–5 條。 */
-val MaColors = listOf(
+/** K 線均線顏色，依序對應設定裡的第 1–5 條；深色主題的第 4 條調亮，文字才看得清楚。 */
+private val LightMaColors = listOf(
     Color(0xFFF59E0B),
     Color(0xFF3B82F6),
     Color(0xFFA855F7),
     Color(0xFF64748B),
     Color(0xFF0891B2),
 )
+private val DarkMaColors = LightMaColors.toMutableList().apply { this[3] = Color(0xFF94A3B8) }
+
+val LocalMaColors = staticCompositionLocalOf { LightMaColors }
+
+/** 色塊上的文字顏色：挑對比較高的深色或白色。 */
+fun onColorFor(background: Color): Color =
+    if (background.luminance() > 0.19f) Color(0xFF0E1015) else Color.White
 
 private val LightScheme = lightColorScheme(
     primary = Color(0xFF2F5BD3),
@@ -74,8 +82,13 @@ fun StockPeekTheme(redUp: Boolean, content: @Composable () -> Unit) {
         up = if (redUp) red else green,
         down = if (redUp) green else red,
         flat = if (dark) Color(0xFF9AA0A6) else Color(0xFF5F6368),
+        caution = if (dark) Color(0xFFF59E0B) else Color(0xFFB45309),
     )
     MaterialTheme(colorScheme = if (dark) DarkScheme else LightScheme) {
-        CompositionLocalProvider(LocalMarketColors provides market, content = content)
+        CompositionLocalProvider(
+            LocalMarketColors provides market,
+            LocalMaColors provides if (dark) DarkMaColors else LightMaColors,
+            content = content,
+        )
     }
 }

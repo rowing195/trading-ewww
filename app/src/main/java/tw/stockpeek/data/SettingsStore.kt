@@ -29,6 +29,9 @@ class SettingsStore(context: Context) {
         val API_KEY = stringPreferencesKey("fugle_api_key_enc")
         val MA = stringPreferencesKey("ma_periods")
         val SHOW_VOLUME = booleanPreferencesKey("show_volume")
+        val SHOW_HILO = booleanPreferencesKey("show_hilo")
+        val SHOW_BOLLINGER = booleanPreferencesKey("show_bollinger")
+        val SUB_INDICATORS = stringPreferencesKey("sub_indicators")
         val RED_UP = booleanPreferencesKey("red_up")
         val SORT = stringPreferencesKey("sort_mode")
     }
@@ -43,6 +46,11 @@ class SettingsStore(context: Context) {
                 brokers = decodePairs(p[Keys.BROKERS]).map { (a, b) -> BrokerApp(a, b) },
                 maPeriods = p[Keys.MA]?.let(::parseMaPeriods) ?: DEFAULT_MA,
                 showVolume = p[Keys.SHOW_VOLUME] ?: true,
+                showHiLo = p[Keys.SHOW_HILO] ?: true,
+                showBollinger = p[Keys.SHOW_BOLLINGER] ?: false,
+                subIndicators = p[Keys.SUB_INDICATORS]
+                    ?.let { raw -> SubIndicator.entries.filter { it.name in raw.split(',') } }
+                    ?: SubIndicator.entries,
                 redUp = p[Keys.RED_UP] ?: true,
                 sortMode = p[Keys.SORT]
                     ?.let { s -> SortMode.entries.firstOrNull { it.name == s } }
@@ -85,8 +93,28 @@ class SettingsStore(context: Context) {
         store.edit { it[Keys.SHOW_VOLUME] = show }
     }
 
+    suspend fun setShowHiLo(show: Boolean) {
+        store.edit { it[Keys.SHOW_HILO] = show }
+    }
+
+    suspend fun setShowBollinger(show: Boolean) {
+        store.edit { it[Keys.SHOW_BOLLINGER] = show }
+    }
+
+    suspend fun setSubIndicators(list: List<SubIndicator>) {
+        store.edit { it[Keys.SUB_INDICATORS] = list.joinToString(",") { s -> s.name } }
+    }
+
     suspend fun setRedUp(redUp: Boolean) {
         store.edit { it[Keys.RED_UP] = redUp }
+    }
+
+    /** K 線相關設定全部回到預設值。 */
+    suspend fun resetChartSettings() {
+        store.edit { p ->
+            listOf(Keys.MA, Keys.SHOW_VOLUME, Keys.SHOW_HILO, Keys.SHOW_BOLLINGER, Keys.SUB_INDICATORS, Keys.RED_UP)
+                .forEach { p.remove(it) }
+        }
     }
 
     suspend fun setSortMode(mode: SortMode) {

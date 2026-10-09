@@ -14,8 +14,20 @@ fun formatPrice(v: Double?): String = v?.let { DecimalFormat("#,##0.##").format(
 fun formatChange(v: Double?): String =
     v?.let { if (it == 0.0) "0" else DecimalFormat("+#,##0.##;-#,##0.##").format(it) } ?: "--"
 
+/** 漲跌點數加箭頭：▲19、▼2.5、平盤 0。 */
+fun formatChangeArrow(v: Double?): String = when {
+    v == null -> "--"
+    v > 0 -> "▲" + DecimalFormat("#,##0.##").format(v)
+    v < 0 -> "▼" + DecimalFormat("#,##0.##").format(-v)
+    else -> "0"
+}
+
 fun formatPercent(v: Double?): String =
     v?.let { if (it == 0.0) "0.00%" else String.format(Locale.US, "%+.2f%%", it) } ?: "--"
+
+/** 指標數值：固定小數位，NaN 顯示 --。 */
+fun formatFixed(v: Double?, decimals: Int): String =
+    if (v == null || v.isNaN()) "--" else String.format(Locale.US, "%.${decimals}f", v)
 
 /** 張數：1 萬張以上用「萬」。 */
 fun formatLots(v: Double?): String = when {

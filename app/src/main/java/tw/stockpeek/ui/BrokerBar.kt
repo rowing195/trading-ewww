@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,6 +26,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,6 +64,7 @@ fun BrokerBar(
     val context = LocalContext.current
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
         Column(Modifier.navigationBarsPadding()) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (brokers.isEmpty()) {
                 if (onManage != null) {
                     TextButton(
@@ -74,15 +80,40 @@ fun BrokerBar(
                     )
                 }
             } else {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                Row(
+                    Modifier.padding(start = 16.dp, top = 10.dp, bottom = 12.dp, end = if (onManage != null) 4.dp else 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    items(brokers, key = { it.packageName }) { app ->
-                        BrokerChip(app) {
-                            if (!launchApp(context, app.packageName, copySymbol)) {
-                                Toast.makeText(context, "打不開 ${app.label}，可能已解除安裝", Toast.LENGTH_SHORT).show()
+                    Column {
+                        Text("下單", style = MaterialTheme.typography.labelLarge)
+                        if (copySymbol != null) {
+                            Text(
+                                "先複製 $copySymbol",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    LazyRow(
+                        Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(brokers, key = { it.packageName }) { app ->
+                            BrokerChip(app) {
+                                if (!launchApp(context, app.packageName, copySymbol)) {
+                                    Toast.makeText(context, "打不開 ${app.label}，可能已解除安裝", Toast.LENGTH_SHORT).show()
+                                }
                             }
+                        }
+                    }
+                    if (onManage != null) {
+                        IconButton(onClick = onManage) {
+                            Icon(
+                                AppIcons.Tune,
+                                contentDescription = "管理券商捷徑",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }
@@ -97,18 +128,28 @@ private fun BrokerChip(app: BrokerApp, onClick: () -> Unit) {
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
-            Modifier.padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+            Modifier
+                .heightIn(min = 44.dp)
+                .padding(start = 8.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AppIcon(app.packageName, 28.dp)
+            AppIcon(app.packageName, 26.dp)
             Spacer(Modifier.width(8.dp))
             Text(
                 app.label,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                AppIcons.ArrowOutward,
+                contentDescription = null,
+                modifier = Modifier.size(15.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

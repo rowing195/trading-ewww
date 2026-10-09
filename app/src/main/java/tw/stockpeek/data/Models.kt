@@ -47,6 +47,13 @@ enum class SortMode(val label: String) {
     LOSS("跌幅大→小"),
 }
 
+/** K 線頁的副圖指標。 */
+enum class SubIndicator(val label: String, val params: String) {
+    KD("KD", "9, 3, 3"),
+    MACD("MACD", "12, 26, 9"),
+    RSI("RSI", "6, 12"),
+}
+
 data class AppSettings(
     val loaded: Boolean = false,
     val hasApiKey: Boolean = false,
@@ -54,6 +61,9 @@ data class AppSettings(
     val brokers: List<BrokerApp> = emptyList(),
     val maPeriods: List<Int> = DEFAULT_MA,
     val showVolume: Boolean = true,
+    val showHiLo: Boolean = true,
+    val showBollinger: Boolean = false,
+    val subIndicators: List<SubIndicator> = SubIndicator.entries,
     val redUp: Boolean = true,
     val sortMode: SortMode = SortMode.CUSTOM,
 )

@@ -27,6 +27,7 @@ import tw.stockpeek.data.Quote
 import tw.stockpeek.data.SYMBOL_REGEX
 import tw.stockpeek.data.SettingsStore
 import tw.stockpeek.data.SortMode
+import tw.stockpeek.data.SubIndicator
 import tw.stockpeek.data.Timeframe
 import tw.stockpeek.data.WatchItem
 import tw.stockpeek.data.parseMaPeriods
@@ -274,8 +275,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { store.setShowVolume(show) }
     }
 
+    fun setShowHiLo(show: Boolean) {
+        viewModelScope.launch { store.setShowHiLo(show) }
+    }
+
+    fun setShowBollinger(show: Boolean) {
+        viewModelScope.launch { store.setShowBollinger(show) }
+    }
+
+    fun setSubIndicator(indicator: SubIndicator, on: Boolean) {
+        val current = settings.value.subIndicators
+        val next = SubIndicator.entries.filter { if (it == indicator) on else it in current }
+        viewModelScope.launch { store.setSubIndicators(next) }
+    }
+
     fun setRedUp(redUp: Boolean) {
         viewModelScope.launch { store.setRedUp(redUp) }
+    }
+
+    fun resetChartSettings() {
+        viewModelScope.launch { store.resetChartSettings() }
     }
 
     // ---------- K 線 ----------
