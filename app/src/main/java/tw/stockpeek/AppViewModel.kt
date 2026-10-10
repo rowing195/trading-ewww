@@ -44,6 +44,12 @@ import kotlin.math.max
 
 data class AddResult(val added: List<WatchItem>, val failed: List<String>, val message: String?)
 
+/** saveApiKey 測試成功時回傳的訊息。 */
+const val KEY_OK = "金鑰可用"
+
+/** saveApiKey 清除金鑰時回傳的訊息。 */
+const val KEY_CLEARED = "已清除金鑰"
+
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private val store = SettingsStore(app)
@@ -232,15 +238,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         store.setApiKey(key)
         if (key.isBlank()) {
             _quotes.value = emptyMap()
-            return "已清除金鑰"
+            return KEY_CLEARED
         }
         return attempt { client.quote("2330") }.fold(
             onSuccess = {
                 lastError = null
                 refreshQuotes()
-                "金鑰可用 ✓"
+                KEY_OK
             },
-            onFailure = { friendly(it) },
+            onFailure = {
+                if (it is ApiException && it.code in setOf(401, 403)) {
+                    "這把金鑰無法使用（HTTP ${it.code}）。請確認有完整複製，前後沒有多餘的空白。"
+                } else {
+                    friendly(it)
+                }
+            },
         )
     }
 

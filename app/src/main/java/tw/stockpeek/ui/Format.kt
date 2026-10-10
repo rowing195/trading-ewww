@@ -2,12 +2,13 @@ package tw.stockpeek.ui
 
 import androidx.compose.ui.text.TextStyle
 import tw.stockpeek.data.Timeframe
+import tw.stockpeek.ui.theme.NumberFamily
 import java.text.DecimalFormat
 import java.util.Locale
 import kotlin.math.abs
 
-/** 等寬數字，價格欄位才會對齊。 */
-fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = "tnum")
+/** 等寬數字字型，價格欄位才會對齊；中文字會自動退回系統字型。 */
+fun TextStyle.tabular(): TextStyle = copy(fontFamily = NumberFamily, fontFeatureSettings = "tnum")
 
 fun formatPrice(v: Double?): String = v?.let { DecimalFormat("#,##0.##").format(it) } ?: "--"
 

@@ -48,7 +48,7 @@ private const val MAX_VISIBLE = 300f
 private const val MA_RANGE_SLACK = 0.3
 
 /** 右側價格刻度的寬度；主圖、副圖一樣寬，K 棒才會上下對齊。 */
-val CHART_AXIS_WIDTH = 52.dp
+val CHART_AXIS_WIDTH = 58.dp
 
 /** 可視範圍：畫面上放幾根 K 棒，以及最右邊藏了幾根（0 = 貼齊最新一根）。 */
 @Stable
@@ -221,10 +221,7 @@ fun CandleChart(
     val market = LocalMarketColors.current
     val scheme = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer(cacheSize = 64)
-    val axisStyle = MaterialTheme.typography.labelSmall.copy(
-        color = scheme.onSurfaceVariant,
-        fontFeatureSettings = "tnum",
-    )
+    val axisStyle = MaterialTheme.typography.labelSmall.tabular().copy(color = scheme.onSurfaceVariant)
     var crossY by remember(viewport) { mutableStateOf<Float?>(null) }
 
     val barCount by rememberUpdatedState(bars.size)

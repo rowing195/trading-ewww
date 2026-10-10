@@ -30,7 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -130,7 +129,7 @@ fun SignalsScreen(vm: AppViewModel, symbol: String, onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = { reload++ }) { Text("重試") }
+                    AppTextButton("重試", onClick = { reload++ })
                 }
                 summary == null -> Text(
                     "日 K 不到 $MIN_SUMMARY_BARS 根，暫時無法判讀",
@@ -399,7 +398,7 @@ private fun BigValue(label: String, value: String, labelColor: Color, valueColor
 private fun OscillatorCard(title: String, params: String, signal: Signal, values: List<Triple<String, Double, Color>>) {
     val scheme = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer(cacheSize = 4)
-    val labelStyle = MaterialTheme.typography.labelSmall.copy(color = scheme.onSurfaceVariant, fontFeatureSettings = "tnum")
+    val labelStyle = MaterialTheme.typography.labelSmall.tabular().copy(color = scheme.onSurfaceVariant)
     Column(
         Modifier
             .fillMaxWidth()

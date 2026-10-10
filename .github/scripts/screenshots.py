@@ -96,10 +96,10 @@ def enter_key(key, attempts=3):
         shell("input keyevent KEYCODE_MOVE_END")
         shell("input keyevent " + " ".join(["KEYCODE_DEL"] * 200))
         type_text(key)
-        tap(text="顯示")
+        tap(desc="顯示金鑰")
         node, _ = find(cls="android.widget.EditText")
         typed = node.get("text", "")
-        tap(text="隱藏")
+        tap(desc="隱藏金鑰")
         if typed == key:
             print("輸入框內容與金鑰一致", flush=True)
             return
@@ -135,7 +135,7 @@ find(text="先設定行情金鑰")
 shot("01-首頁-未設定金鑰")
 
 tap(text="前往設定")
-find(text="行情資料（富果 API）")
+find(text="行情資料")
 
 if not key:
     shot("02-設定")
@@ -146,8 +146,8 @@ if not key:
 
 enter_key(key)
 tap(text="儲存並測試")
-node, _ = find(text=r"金鑰可用 ✓|.*(無效|失敗|錯誤|上限|HTTP).*", timeout=40)
-if not node.get("text").endswith("✓"):
+node, _ = find(text=r"金鑰可用.*|.*(無效|無法使用|失敗|錯誤|上限|HTTP).*", timeout=40)
+if not node.get("text").startswith("金鑰可用"):
     raise SystemExit("金鑰測試失敗：" + node.get("text"))
 shot("02-設定")
 

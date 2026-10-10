@@ -28,9 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +36,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -124,6 +121,7 @@ fun HomeScreen(vm: AppViewModel, onOpen: (String) -> Unit, onSettings: () -> Uni
                     Box {
                         TextButton(
                             onClick = { sortMenu = true },
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
                         ) {
                             Icon(AppIcons.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -429,7 +427,8 @@ private fun StockRow(
                 onClick = { onMove(1); menu = false },
             )
             DropdownMenuItem(
-                text = { Text("刪除", color = MaterialTheme.colorScheme.error) },
+                text = { Text("刪除") },
+                leadingIcon = { Icon(AppIcons.Trash, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 onClick = { onRemove(); menu = false },
             )
             if (!canReorder) {
@@ -500,7 +499,7 @@ private fun EmptyState(title: String, body: String, action: String, onAction: ()
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(20.dp))
-        Button(onClick = onAction) { Text(action) }
+        PrimaryButton(action, onClick = onAction)
     }
 }
 
@@ -531,34 +530,39 @@ private fun AddStockDialog(vm: AppViewModel, onDismiss: () -> Unit, onAdded: (St
 
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text("新增股票") },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        title = { Text("新增股票", fontWeight = FontWeight.Bold) },
         text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    error = null
-                },
-                label = { Text("代號或名稱") },
-                placeholder = { Text("2330 0050 鴻海") },
-                supportingText = { Text(error ?: "可一次輸入多檔，用空白或逗號分隔") },
-                isError = error != null,
-                minLines = 2,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { submit() }, enabled = !busy && text.isNotBlank()) {
-                if (busy) {
-                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                } else {
-                    Text("新增")
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppTextField(
+                    value = text,
+                    onValueChange = {
+                        text = it
+                        error = null
+                    },
+                    label = "代號或名稱",
+                    placeholder = "2330 0050 鴻海",
+                    isError = error != null,
+                    errorText = error,
+                    singleLine = false,
+                    minLines = 2,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (error == null) {
+                    Text(
+                        "可一次輸入多檔，用空白或逗號分隔",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         },
+        confirmButton = {
+            PrimaryButton("新增", onClick = { submit() }, enabled = text.isNotBlank(), loading = busy)
+        },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !busy) { Text("取消") }
+            AppTextButton("取消", onClick = onDismiss, enabled = !busy)
         },
     )
 }

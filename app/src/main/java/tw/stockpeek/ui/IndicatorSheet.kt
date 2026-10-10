@@ -15,20 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -55,7 +50,6 @@ import tw.stockpeek.data.DEFAULT_MA
 import tw.stockpeek.data.SubIndicator
 import tw.stockpeek.data.parseMaPeriods
 import tw.stockpeek.ui.theme.LocalMaColors
-import tw.stockpeek.ui.theme.LocalMarketColors
 
 private const val MA_SLOTS = 5
 
@@ -65,7 +59,6 @@ private const val MA_SLOTS = 5
 fun IndicatorSheet(vm: AppViewModel, settings: AppSettings, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
-    val market = LocalMarketColors.current
     val maColors = LocalMaColors.current
     val maTexts = remember(settings.maPeriods) {
         mutableStateListOf(*Array(MA_SLOTS) { settings.maPeriods.getOrNull(it)?.toString().orEmpty() })
@@ -97,10 +90,10 @@ fun IndicatorSheet(vm: AppViewModel, settings: AppSettings, onDismiss: () -> Uni
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = {
+                AppTextButton("恢復預設", onClick = {
                     vm.resetChartSettings()
                     DEFAULT_MA.forEachIndexed { i, p -> if (i < MA_SLOTS) maTexts[i] = p.toString() }
-                }) { Text("恢復預設") }
+                })
             }
 
             SectionTitle("主圖 · 均線", "最多 5 條 · 週期 2–240 · 留空不顯示")
@@ -115,36 +108,28 @@ fun IndicatorSheet(vm: AppViewModel, settings: AppSettings, onDismiss: () -> Uni
                 }
             }
             Spacer(Modifier.height(6.dp))
-            SwitchRow("成交量疊在主圖", null, settings.showVolume) { vm.setShowVolume(it) }
-            SwitchRow("最高／最低價標記", null, settings.showHiLo) { vm.setShowHiLo(it) }
-            SwitchRow("布林通道", "20, 2", settings.showBollinger) { vm.setShowBollinger(it) }
+            SheetSwitch("成交量疊在主圖", null, settings.showVolume) { vm.setShowVolume(it) }
+            SheetSwitch("最高／最低價標記", null, settings.showHiLo) { vm.setShowHiLo(it) }
+            SheetSwitch("布林通道", "20, 2", settings.showBollinger) { vm.setShowBollinger(it) }
 
             SectionTitle("副圖分頁", null)
             SubIndicator.entries.forEach { ind ->
-                SwitchRow(ind.label, ind.params, ind in settings.subIndicators) { vm.setSubIndicator(ind, it) }
+                SheetSwitch(ind.label, ind.params, ind in settings.subIndicators) { vm.setSubIndicator(ind, it) }
             }
 
             SectionTitle("漲跌顏色", null)
-            val red = if (settings.redUp) market.up else market.down
-            val green = if (settings.redUp) market.down else market.up
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ColorChoice("紅漲綠跌", settings.redUp, upColor = red, downColor = green) { vm.setRedUp(true) }
-                ColorChoice("綠漲紅跌", !settings.redUp, upColor = green, downColor = red) { vm.setRedUp(false) }
-            }
+            RedUpChoice(redUp = settings.redUp, onChange = { vm.setRedUp(it) }, modifier = Modifier.fillMaxWidth())
 
             Spacer(Modifier.height(20.dp))
-            Button(
+            PrimaryButton(
+                "完成",
                 onClick = {
                     saveMa()
                     scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
                 },
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-            ) {
-                Text("完成", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
+                large = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -209,56 +194,9 @@ private fun RowScope.MaField(index: Int, value: String, color: Color, onChange: 
     }
 }
 
+/** 面板裡的開關列，下方接分隔線。 */
 @Composable
-private fun SwitchRow(label: String, params: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
-            .heightIn(min = 52.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        if (params != null) {
-            Text(
-                params,
-                style = MaterialTheme.typography.labelMedium.tabular(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.width(12.dp))
-        }
-        Switch(checked = checked, onCheckedChange = null)
-    }
+private fun SheetSwitch(label: String, params: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    SwitchRow(label, checked = checked, onChange = onChange, params = params)
     HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-}
-
-@Composable
-private fun RowScope.ColorChoice(
-    label: String,
-    selected: Boolean,
-    upColor: Color,
-    downColor: Color,
-    onClick: () -> Unit,
-) {
-    val scheme = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(12.dp)
-    Row(
-        Modifier
-            .weight(1f)
-            .height(46.dp)
-            .clip(shape)
-            .background(if (selected) scheme.outlineVariant else scheme.surfaceContainerHigh)
-            .border(1.dp, if (selected) scheme.primary else scheme.outlineVariant, shape)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("▲", style = MaterialTheme.typography.labelSmall, color = upColor)
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-        )
-        Text("▼", style = MaterialTheme.typography.labelSmall, color = downColor)
-    }
 }

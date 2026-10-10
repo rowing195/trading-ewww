@@ -32,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -67,10 +66,11 @@ fun BrokerBar(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (brokers.isEmpty()) {
                 if (onManage != null) {
-                    TextButton(
+                    AppTextButton(
+                        "＋ 加入券商 App 捷徑，一鍵切過去下單",
                         onClick = onManage,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) { Text("＋ 加入券商 App 捷徑，一鍵切過去下單") }
+                    )
                 } else {
                     Text(
                         "到首頁右上角設定加入券商 App 捷徑",

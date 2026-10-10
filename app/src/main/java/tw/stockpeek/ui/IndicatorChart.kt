@@ -77,10 +77,7 @@ fun IndicatorChart(
     val market = LocalMarketColors.current
     val scheme = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer(cacheSize = 16)
-    val axisStyle = MaterialTheme.typography.labelSmall.copy(
-        color = scheme.onSurfaceVariant,
-        fontFeatureSettings = "tnum",
-    )
+    val axisStyle = MaterialTheme.typography.labelSmall.tabular().copy(color = scheme.onSurfaceVariant)
     val barCount by rememberUpdatedState(bars.size)
     val selected by rememberUpdatedState(selectedIndex)
     val select by rememberUpdatedState(onSelect)
